@@ -29,6 +29,8 @@
 6. HOC (高阶组件)
 7. Context (上下文)
 
+> 以下代码均可直接粘贴到App.js的入口文件来运行测试
+
 ### **1. Class Component(类组件)**
 > 在 React vsersion < 16.8 之前，Class Component是跟踪 React 组件状态和生命周期的唯一方法。 功能组件被认为是"无状态的"。所以设计组件我们会使用如下伪代码的类似方式进行。
 >
@@ -43,14 +45,10 @@ class MyComponent extends React.Component {
   }
 }
 
-export default MyComponent
-
-------------------
-
 // App.js
-import MyComponent from "./MyComponent"
+// import MyComponent from "./MyComponent"
 
-function App () => {
+export default function App () => {
     return <MyComponent name='im class component' />
 }
 ```
@@ -65,18 +63,16 @@ function App () => {
 > ##### **备注：** 虽然你仍然可以使用Class Component, 不过Functional Component是首选
 
 ```javascript
-
+import React from 'react'
 // MyComponent.js
-export default function MyComponent(props) {
+function MyComponent(props) {
     return <div >im functional component</div>
 }
-
-------------------
 
 // App.js
 import MyComponent from "./MyComponent"
 
-function App () => {
+export default function App () => {
     return <MyComponent />
 }
 ```
@@ -90,16 +86,14 @@ function App () => {
 ```javascript
 
 // MyComponent.js
-export default function MyComponent(props) {
+function MyComponent(props) {
     return <div >{props.name}</div>
 }
 
-------------------
-
 // App.js
-import MyComponent from "./MyComponent"
+// import MyComponent from "./MyComponent"
 
-function App () => {
+export default function App () => {
     return <MyComponent name='im my component, my name pass from props' />
 }
 ```
@@ -126,14 +120,10 @@ const Counter = (props) => {
     </>)
 }
 
-export default Counter
-
-------------------
-
 // App.js
-import Counter from "./Counter"
+// import Counter from "./Counter"
 
-function App () => {
+export default function App () => {
     return <Counter />
 }
 ```
@@ -174,7 +164,7 @@ new Vue({
 ```javascript
 import { useState, useMemo } from 'react'
 
-function Feature() {
+export default function Feature() {
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState('wait for query api to get message')
     const queryApi = () => {
@@ -455,9 +445,3 @@ export default withLoading()(Feature)
 
 ```
 
-
-## MWS的简介
-> 待完善
-
-## MWS的限制和注意事项
-> 待完善
