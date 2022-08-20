@@ -506,6 +506,35 @@ function App () {
 
 *注：上面这段代码在实际执行是行不通的，因为会不断递归执行。要解决这个问题需要和下面讲到的useEffect一起配合使用，这个稍后会说*
 
+useState 可以多次声明多个不同类型的状态变量，例如：
+
+```javascript
+function App () {
+    const [count, setCount] = useState(0)
+    const [flag , setFlag] = useState(false)
+    const [array, setArray] = useState([])
+    const [object, setObject] = useState({})
+}
+```
+其中，Number 和 Boolean 比较容易理解啦，直接覆盖更新即可。需要注意的是Object和数组这些类型的对象，react并没有在setState的函数里面提供合并更新的逻辑，以下举一个例子：
+
+```javascript
+function App () 
+    const [object, setObject] = useState({ a: 'i am a' })
+    console.info(object); // --> { "a": "i am a" }
+
+    setObject({
+        ...object,
+        b: 'i am b'
+    })
+    console.info(object); // --> { "a": "i am a", "b": "i am b" }
+    
+    setObject({
+        b: 'i am b'
+    })
+    console.info(object); // --> { "b": "i am b" }
+}
+```
 
 ### useCallback
 ### useMemo
