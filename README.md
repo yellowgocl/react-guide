@@ -9,13 +9,13 @@
     - [**5. 代码拆分**](#5-代码拆分)
     - [**6. HOC(High Order Component)**](#6-hochigh-order-component)
     - [**7. Context(上下文)**](#7-context上下文)
-  - [React主要Hook介绍](#react主要Hook介绍)
-    - [**useState**](#useState)
-    - [**useCallback**](#useCallback)
-    - [**useMemo**](#useMemo)
-    - [**useRef**](#useRef)
-    - [**useId**](#useId)
-  - [使用自定义Hook](#使用自定义Hook)
+  - [React主要Hook介绍](#react主要hook介绍)
+    - [useState](#usestate)
+    - [useCallback](#usecallback)
+    - [useMemo](#usememo)
+    - [useRef](#useref)
+    - [useId](#useid)
+  - [使用自定义Hook](#使用自定义hook)
 
 ## 序言
 > 建议先从官网文档阅读，这样会让你更快对React这个框架有一个更好的了解
@@ -99,7 +99,7 @@ function MyComponent(props) {
 // App.js
 // import MyComponent from "./MyComponent"
 
-export default function App () => {
+export default function App () {
     return <MyComponent name='im my component, my name pass from props' />
 }
 ```
@@ -129,7 +129,7 @@ const Counter = (props) => {
 // App.js
 // import Counter from "./Counter"
 
-export default function App () => {
+export default function App () {
     return <Counter />
 }
 ```
@@ -452,8 +452,61 @@ export default withLoading()(Feature)
 ```
 
 ## React主要Hook介绍
+> 在介绍Hook之前，先阐明一下基本的规则。
+> 
+> **注意：以下虽然只用了```useState```作为示例，但这些规则其实可以适用到诸如```useEffect, useCallback, useMemo```等所有官方Hook和自定义的Hook。**
++ ### 只能在```Functional Component```使用，```Class Component```是不能使用的，例如：
+     ```javascript
+    [√] function Functional () {
+         const state = useState()
+    }
+
+    [×] class ClassComponent extends React.component {
+        render() {
+            const state = useState()
+        }
+    }
+
+     ```
++ ### 只能在```Functional Component```的函数顶层使用，不要在循环、條件判断块或是嵌套的 function 应用 Hook，因为这样才能确保每次 render 时候 Hook 被执行順序都要是一樣的。例如：
+     ```javascript
+    function App () {
+        [√] const state = useState()
+
+        [×] if (true) {
+                const state1 = useState()
+            }
+
+        [×] function temp () {
+                const state2 = useState()
+            }
+
+        [×] for(const i in []) {
+                const statei = useState(is)
+            }
+    }
+
+     ```
 
 ### useState
+> useState是React其中一个常用的hook，如果你有按照顺序从上至下看这份文档，应该不难发现在上面的示例代码片段里面也有应用。在这一篇章我们稍微深入一点去了解这个hook可以如何在实际场景中进行应用
+
+useState的参数是任何类型，但其中传入函数的话有特殊的作用，这个稍后再说，现在先说执行后会返回一个array，里面固定有两个值，第一个是当年前对应这个Hook的状态值，第二个是用于执行更新该状态的函数，执行该函数后，函数组件将会出发re-render更新视图。例如：
+
+```javascript
+function App () {
+    const [count, setCount] = useState(0)
+    // console.info(count) // ==> 0
+
+    setCount(2)
+    // console.info(count) // ==> 2
+}
+```
+**以上代码片段为伪代码**，它的意思是，useState这个Hook被执行后，在当前函数组件内定义了一个叫```count```的状态值，还有一个用于更新该状态的函数```setCount```，当执行```setCount(2)```后，```count```将会被更新成 ***2*** 。
+
+*注：上面这段代码在实际执行是行不通的，因为会不断递归执行。要解决这个问题需要和下面讲到的useEffect一起配合使用，这个稍后会说*
+
+
 ### useCallback
 ### useMemo
 ### useRef
