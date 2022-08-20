@@ -458,14 +458,14 @@ export default withLoading()(Feature)
 + ### 只能在```Functional Component```使用，```Class Component```是不能使用的，例如：
      ```javascript
     [√] function Functional () {
-         const state = useState()
-    }
-
-    [×] class ClassComponent extends React.component {
-        render() {
             const state = useState()
         }
-    }
+
+    [×] class ClassComponent extends React.component {
+            render() {
+                const state = useState()
+            }
+        }
 
      ```
 + ### 只能在```Functional Component```的函数顶层使用，不要在循环、條件判断块或是嵌套的 function 应用 Hook，因为这样才能确保每次 render 时候 Hook 被执行順序都要是一樣的。例如：
