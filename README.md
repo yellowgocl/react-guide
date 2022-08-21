@@ -11,6 +11,7 @@
     - [**7. Context(上下文)**](#7-context上下文)
   - [React主要Hook介绍](#react主要hook介绍)
     - [useState](#usestate)
+    - [useEffect](#useeffect)
     - [useCallback](#usecallback)
     - [useMemo](#usememo)
     - [useRef](#useref)
@@ -457,7 +458,7 @@ export default withLoading()(Feature)
 > **注意：以下虽然只用了```useState```作为示例，但这些规则其实可以适用到诸如```useEffect, useCallback, useMemo```等所有官方Hook和自定义的Hook。**
 + ### 只能在```Functional Component```使用，```Class Component```是不能使用的，例如：
      ```javascript
-    [√] function Functional () {
+    [√] function Functional() {
             const state = useState()
         }
 
@@ -470,19 +471,19 @@ export default withLoading()(Feature)
      ```
 + ### 只能在```Functional Component```的函数顶层使用，不要在循环、條件判断块或是嵌套的 function 应用 Hook，因为这样才能确保每次 render 时候 Hook 被执行順序都要是一樣的。例如：
      ```javascript
-    function App () {
+    function App() {
         [√] const state = useState()
 
         [×] if (true) {
                 const state1 = useState()
             }
 
-        [×] function temp () {
+        [×] function temp() {
                 const state2 = useState()
             }
 
         [×] for(const i in []) {
-                const statei = useState(is)
+                const statei = useState()
             }
     }
 
@@ -494,7 +495,7 @@ export default withLoading()(Feature)
 useState的参数是任何类型，但其中传入函数的话有特殊的作用，这个稍后再说，现在先说执行后会返回一个array，里面固定有两个值，第一个是当年前对应这个Hook的状态值，第二个是用于执行更新该状态的函数，执行该函数后，函数组件将会出发re-render更新视图。例如：
 
 ```javascript
-function App () {
+export default function App() {
     const [count, setCount] = useState(0)
     // console.info(count) // ==> 0
 
@@ -509,17 +510,18 @@ function App () {
 useState 可以多次声明多个不同类型的状态变量，例如：
 
 ```javascript
-function App () {
+export default function App() {
     const [count, setCount] = useState(0)
     const [flag , setFlag] = useState(false)
     const [array, setArray] = useState([])
     const [object, setObject] = useState({})
+    
 }
 ```
-其中，Number 和 Boolean 比较容易理解啦，直接覆盖更新即可。需要注意的是Object和数组这些类型的对象，react并没有在setState的函数里面提供合并更新的逻辑，以下举一个例子：
+其中，Number 和 Boolean 比较容易理解啦，直接覆盖更新即可。需要注意的是Object和数组这些类型的对象，react并没有在setState的函数里面提供合并更新的逻辑，以下举一个例子，从代码可以清晰看到，如果state是object ***(array同理，但需要注意deep clone问题，不过由于不是讨论的重点，这里不过多赘述，有兴趣的人可以自行google)***，需要用```Object.assign```或ES6的```Destructuring（解构赋值）```来进行更新：
 
 ```javascript
-function App () 
+export default function App() { 
     const [object, setObject] = useState({ a: 'i am a' })
     console.info(object); // --> { "a": "i am a" }
 
@@ -528,7 +530,7 @@ function App ()
         b: 'i am b'
     })
     console.info(object); // --> { "a": "i am a", "b": "i am b" }
-    
+
     setObject({
         b: 'i am b'
     })
@@ -536,6 +538,131 @@ function App ()
 }
 ```
 
+接下来，我们看看useState传入函数类型参数和setState传入函数类型参数的作用，首先先说一下在初始化Hook时候传入函数和传入其他类型参数的区别
+
+```javascript
+import { useCallback, useEffect, useState } from 'react'
+export default function App() {
+
+  const initState = useCallback((flag) => {
+      console.info('get init state from call function:', flag)
+      return 100
+  }, [])
+
+  // 这里两个Hook都会运行在每一次re-render
+  const [count, setCount] = useState(9)
+  const [countInitByFunc, setCountInitByFunc] = useState(initState(false))
+
+  // 这里传入一个高阶函数，则只会在组件第一次初始化时候运行一次，其余重绘都不会触发执行
+  const [countInitByCall, setCountInitByCall] = useState(() => initState(true))
+
+  console.info({ count, countInitByCall, countInitByFunc })
+
+  useEffect(() => {
+    // 在一秒后触发一次setCount让整个组件re-render
+    setTimeout(() => {
+      setCount(2000)
+    }, 1000)
+  }, [])
+}
+```
+
+output
+```text
+get init state from call function: false
+get init state from call function: true
+{count: 9, countInitByCall: 100, countInitByFunc: 100}
+
+// 一秒后
+get init state from call function: false
+{count: 2000, countInitByCall: 100, countInitByFunc: 100}
+```
+
+从控制台的输出可以看到，```get init state from call function: true```只会在组件第一次初始化时候执行一次，re-render的时候是不会再触发执行。
+
+*注意：如果你把上面代码直接复制到您的程序入口运行，您会发现控制台输出是double两次的，这个和[React的严格模式](https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects)有关，其只会在dev模式下出现，在prod打包后会恢复正常。如果实在希望看到准确的输出，可以在```main.js```内找到```React.StrictMode```的标签移除掉*
+
+```javascript
+// main.js
+...
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <App />
+  // 注释下面这段code，改成只在入口渲染App
+  // <React.StrictMode>
+  //   <App />
+  // </React.StrictMode>
+)
+...
+```
+
+接下来我们看看，在更新状态的函数内传入函数类型的参数会有什么作用。
+
+一般来说，直接传入需要更新的状态是不会有问题的，但如果更新的状态涉及异步操作，这就好可能会出现如下情况，下面代码将先模拟一段逻辑，演示如何让被更新的状态坏掉😀
+
+```javascript
+import { useCallback, useMemo, useState } from 'react'
+export default function App() {
+
+  const [count, setCount] = useState(9)
+  const [counting, setCounting] = useState(false)
+
+  const incrementDelayByFunc = () => {
+    setCounting(true)
+    setTimeout(() => {
+      setCount((count) => count + 1)
+      setCounting(false)
+    }, 2000)
+  }
+
+  const incrementDelay = () => {
+    setCounting(true)
+    setTimeout(() => {
+      setCount(count + 1)
+      setCounting(false)
+    }, 2000)
+  }
+
+  const increment = () => {
+    setCount((count) => count + 1)
+  }
+
+  const countingStyle = useMemo(() => {
+    return {
+      background: counting ? '#333' : null
+    }
+  }, [counting])
+
+  const countingLabel = useCallback((label) => {
+    return counting ? '正在更新count...' : (label || '延迟2秒count自增1(by value)')
+  }, [counting])
+  
+  return (
+    <>
+      <h1>count: {count}</h1>
+      <button onClick={increment}>count自增1</button>
+      <button style={countingStyle} disabled={counting} onClick={incrementDelay}>{countingLabel()}</button>
+      <button style={countingStyle} disabled={counting} onClick={incrementDelayByFunc}>{countingLabel('延迟2秒count自增1(by function)')}</button>
+    </>
+  )
+}
+```
+
+上述代码片段可以运行后可以看见三个按钮和一个count的结果，如果我们尝试按照以下的步骤可以观察以下每个步骤所得出不一样的结果： 
+
++ 当点击 **【count马上增加1】**，```count```会马上增加 ```1```，
++ 当点击 **【延迟2秒count增加1(by value)】** 和 **【延迟2秒count增加1(by function)】** ，```count```会在2秒后增加 ```1```。
+
++ 不过我们如果操作上稍微赶时间一点，在点击了第二或者第三个延迟按钮后，不等更新的结果，马上去点击第一个 **【count自增1】**的按钮，这时候你会发现，如果点击的是第二个延迟更新按钮，不论你点击多少次 **【count自增1】** 去改变```count```，时间到2秒后，```count```会变成你点击第二个按钮那时候的值的基础上加1。
+  
+    ***例如:*** *当前```count```是```9```，点击第二个按钮后，马上点击第一个按钮3次，这时候你会看见```count```是```12```，然后你预期的结果应该是到2秒后```count```的结果是```13```，但结果是```10```。*
+
++ 当点击第三个按钮 **【延迟2秒count增加1(by function)】** 再执行上面说的步骤，得到的结果则是符合预期的13。
+    
+    造成这个的原因是状态的字面量需要在每次re-render后才是更新后的结果。所以如果需要确保延迟更新是最新的状态结果上累加1，需要采用回调的方法传入一个函数给setState，并对回调函数的prev参数进行运算后返回。这个可以参考上述代码中 ```incrementDelayByFunc``` 内的```setCount((count) => count + 1)``` 来尝试理解。
+
+---
+
+### useEffect
 ### useCallback
 ### useMemo
 ### useRef

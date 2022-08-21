@@ -1,33 +1,45 @@
-import { useState, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+export default function App() {
 
-export default function Feature() {
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState('wait for query api to get message')
-    const queryApi = () => {
-        return new Promise((resolve,) => {
-            setTimeout(() => resolve({ message: 'query api success!' }), 1000)
-        })
+  const [count, setCount] = useState(9)
+  const [counting, setCounting] = useState(false)
+
+  const incrementDelayByFunc = () => {
+    setCounting(true)
+    setTimeout(() => {
+      setCount((count) => count + 1)
+      setCounting(false)
+    }, 2000)
+  }
+
+  const incrementDelay = () => {
+    setCounting(true)
+    setTimeout(() => {
+      setCount(count + 1)
+      setCounting(false)
+    }, 2000)
+  }
+
+  const increment = () => {
+    setCount((count) => count + 1)
+  }
+
+  const countingStyle = useMemo(() => {
+    return {
+      background: counting ? '#333' : null
     }
-    
-    const onClick = async() => {
-        setIsLoading(true)
-        const { message } = await queryApi()
-        setMessage(message)
-        setIsLoading(false)
-    }
+  }, [counting])
 
-    const styles = useMemo(() => {
-        return {
-            color: isLoading ? '#a1a1a1' : 'black'
-        }
-    }, [isLoading])
-
-    const Loading = useMemo(() => {
-        return isLoading && <span>loading...</span>
-    }, [isLoading])
-
-    return (<>
-        <h2>{message}</h2>
-        <button style={styles} disabled={isLoading} onClick={onClick}>{Loading}query api</button>
-    </>)
+  const countingLabel = useCallback((label) => {
+    return counting ? '正在更新count...' : (label || '延迟2秒count自增1(by value)')
+  }, [counting])
+  
+  return (
+    <>
+      <h1>count: {count}</h1>
+      <button onClick={increment}>count自增1</button>
+      <button style={countingStyle} disabled={counting} onClick={incrementDelay}>{countingLabel()}</button>
+      <button style={countingStyle} disabled={counting} onClick={incrementDelayByFunc}>{countingLabel('延迟2秒count自增1(by function)')}</button>
+    </>
+  )
 }
